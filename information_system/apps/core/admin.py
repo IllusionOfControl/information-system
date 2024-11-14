@@ -4,7 +4,8 @@ from .models import (
     User,
     Department,
     DeviceType,
-    Device,
+    DeviceModel,
+    DeviceInstance,
     MaintenanceType,
     Maintenance,
     MalfunctionType,
@@ -32,12 +33,18 @@ class DeviceTypeAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-@admin.register(Device)
+@admin.register(DeviceModel)
 class DeviceAdmin(admin.ModelAdmin):
-    list_display = ('inventory_number', 'name', 'type', 'department')
-    list_filter = ('type', 'department')
-    search_fields = ('inventory_number', 'name')
+    list_display = ('name', 'type')
+    list_filter = ('type',)
+    search_fields = ('name',)
 
+
+@admin.register(DeviceInstance)
+class DeviceAdmin(admin.ModelAdmin):
+    list_display = ('inventory_number', 'device_model', 'department')
+    list_filter = ('device_model', 'department')
+    search_fields = ('inventory_number',)
 
 @admin.register(MaintenanceType)
 class MaintenanceTypeAdmin(admin.ModelAdmin):
@@ -47,9 +54,9 @@ class MaintenanceTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Maintenance)
 class MaintenanceAdmin(admin.ModelAdmin):
-    list_display = ('date', 'device', 'type', 'performed_by', 'note')
-    list_filter = ('date', 'type', 'performed_by', 'device__department')
-    search_fields = ('device__name', 'note')
+    list_display = ('date', 'device_instance', 'type', 'performed_by', 'note')
+    list_filter = ('date', 'type', 'performed_by', 'device_instance__department')
+    search_fields = ('device_instance__device_model__name', 'note')
 
 
 @admin.register(MalfunctionType)
@@ -60,6 +67,6 @@ class MalfunctionTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Repair)
 class RepairAdmin(admin.ModelAdmin):
-    list_display = ('date_breakdown', 'device', 'malfunction_type', 'date_repair', 'performed_by', 'note')
-    list_filter = ('date_breakdown', 'date_repair', 'malfunction_type', 'performed_by', 'device__department')
-    search_fields = ('device__name', 'note')
+    list_display = ('date_breakdown', 'device_instance', 'malfunction_type', 'date_repair', 'performed_by', 'note')
+    list_filter = ('date_breakdown', 'date_repair', 'malfunction_type', 'performed_by', 'device_instance__department')
+    search_fields = ('device_instance__device_model__name', 'note')

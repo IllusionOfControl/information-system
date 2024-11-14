@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1>Список отделений почтовой связи</h1>
+
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Название</th>
+      <th>Индекс</th>
+      <th>Телефон</th>
+      <th>Тип</th>
+      <th>Район</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for department in departments %}
+    <tr>
+      <td>{{ department.name }}</td>
+      <td>{{ department.index }}</td>
+      <td>{{ department.phone }}</td>
+      <td>{{ department.get_type_display }}</td>
+      <td>{{ department.district }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock content %}
