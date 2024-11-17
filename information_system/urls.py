@@ -17,10 +17,13 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
+
 from information_system.apps.core import views as core_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('departments/', core_views.department_list, name='department-list'),
-    path('devices/', core_views.device_list, name='device-list'),
+    path('', core_views.index, name='index'),
+    path('departments/', core_views.department_list, name='department_list'),
+    path('devices/', core_views.device_list, name='device_list'),
+    path('device_models/', core_views.device_model_list, name='device_model_list'),
 ]

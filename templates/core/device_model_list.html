@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>Справочник "Об устройстве"</h1>
+
+    <div class="row">
+        <div class="col-md-3">
+            <h2>Список моделей</h2>
+            <ul class="list-group">
+                <li class="list-group-item {% if not selected_device_type %}active{% endif %}">
+{#                    <a href="{% url 'device_model_list' %}">Все</a>#}
+                </li>
+                {% for device_type in device_types %}
+                    <li class="list-group-item {% if device_type == selected_device_type %}active{% endif %}">
+                        <a data-bs-toggle="collapse" href="#collapse{{ device_type.id }}" role="button"
+                           aria-expanded="false" aria-controls="collapse{{ device_type.id }}">
+                            {{ device_type.name }}
+                        </a>
+                        <div class="collapse" id="collapse{{ device_type.id }}">
+                            <ul class="list-unstyled">
+{#                                <li class="{% if device_type == selected_device_type and not selected_device_model %}active{% endif %}">#}
+{#                                    <a href="{% url 'device_model_list' %}?device_type={{ device_type.id }}"#}
+{#                                       style="padding-left: 20px;">#}
+{#                                        Все#}
+{#                                    </a>#}
+{#                                </li>#}
+                                {% for device_model in device_models %}
+                                    {% if device_model.type == device_type %}
+                                        <li class="{% if device_model == selected_device_model %}active{% endif %}">
+                                            <a href="{% url 'device_model_list' %}?device_model={{ device_model.id }}"
+                                               style="padding-left: 20px;">
+                                                {{ device_model.manufacturer }} {{ device_model.name }}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="col-md-9">
+            {% if selected_device_model %}
+                <h2>{{ selected_device_model.manufacturer }} {{ selected_device_model.name }}</h2>
+                <p>{{ selected_device_model.description }}</p>
+
+                <h3>Экземпляры устройства</h3>
+                <ul>
+                    {% for instance in device_instances %}
+                        <li>
+                            Инвентарный номер: {{ instance.inventory_number }}, ОПС: {{ instance.department.name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+
+            {% elif selected_device_type %}
+                <h2>{{ selected_device_type.name }}</h2>
+                <h3>Экземпляры устройств</h3>
+                <ul>
+                    {% for instance in device_instances %}
+                        <li>
+                            {{ instance.device_model.manufacturer }} {{ instance.device_model.name }}
+                            - {{ instance.inventory_number }}, ОПС: {{ instance.department.name }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Выберите модель устройства из списка слева.</p>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}

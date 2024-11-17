@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Добро пожаловать в систему учета устройств!</h1>
+<p>Это главная страница приложения.</p>
+
+<ul>
+    <li><a href="{% url 'department_list' %}">Справочник ОПС</a></li>
+    <li><a href="{% url 'device_model_list' %}">Справочник "Об устройстве"</a></li>
+    </ul>
+
+{% endblock %}
