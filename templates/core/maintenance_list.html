@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Техническое обслуживание</h1>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Инвентарный номер</th>
+            <th>Тип устройства</th>
+            <th>Модель Устройства</th>
+            <th>Вид ТО</th>
+            <th>Работу выполнил</th>
+            <th>Примечание</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for maintenance in maintenances %}
+        <tr>
+            <td>{{ maintenance.date }}</td>
+            <td>{{ maintenance.device.inventory_number }}</td>
+            <td>{{ maintenance.device.device_model.name }}</td>
+            <td>{{ maintenance.device.device_model.manufacturer }}</td>
+            <td>{{ maintenance.type.name }}</td>
+            <td>{{ maintenance.performed_by.FIO }}</td>
+            <td>{{ maintenance.note }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

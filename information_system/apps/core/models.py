@@ -52,6 +52,7 @@ class DeviceModel(models.Model):
     manufacturer = models.CharField(max_length=255, verbose_name="Производитель")
     description = models.TextField(blank=True, verbose_name="Описание")
     type = models.ForeignKey(DeviceType, on_delete=models.PROTECT, verbose_name="Тип")
+    image = models.ImageField(upload_to='device_images/', blank=True, null=True, verbose_name="Изображение")
 
     def __str__(self):
         return f"{self.manufacturer} {self.name}"

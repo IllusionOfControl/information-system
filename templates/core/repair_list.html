@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Ремонт устройств</h1>
+
+    <form method="get" class="mb-4">
+        <div class="row">
+            <div class="col-sm-3 my-1">
+                <label for="device_name_filter">Название устройства</label>
+                <input type="text" class="form-control" name="device_name" placeholder=""
+                       id="device_name_filter"
+                       value="{{ request.GET.device_name }}">
+            </div>
+            <div class="col-sm-3 my-1">
+                <label for="date_breakdown_start_filter">Дата поломки (начало)</label>
+                <input type="date" class="form-control" name="date_breakdown_start" placeholder=""
+                       id="date_breakdown_start_filter"
+                       value="{{ request.GET.date_breakdown_start }}">
+            </div>
+            <div class="col-sm-3 my-1">
+                <label for="date_breakdown_end_filter">Дата поломки (конец)</label>
+                <input type="date" class="form-control" name="date_breakdown_end" placeholder=""
+                       id="date_breakdown_end_filter"
+                       value="{{ request.GET.date_breakdown_end }}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 my-1">
+                <label for="device_type_filter">Тип устройства</label>
+                <select class="form-control" name="device_type" id="device_type_filter">
+                    <option value="">Все типы устройств</option>
+                    {% for type in device_types %}
+                        <option value="{{ type.id }}"
+                                {% if request.GET.device_type == type.id|stringformat:"s" %}selected{% endif %}>{{ type.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-3 my-1">
+                <label for="malfunction_type_filter">Тип неисправности</label>
+                <select class="form-control" name="malfunction_type" id="malfunction_type_filter">
+                    <option value="">Все неисправности</option>
+                    {% for malfunction in malfunction_types %}
+                        <option value="{{ malfunction.id }}"
+                                {% if request.GET.malfunction_type == malfunction.id|stringformat:"s" %}selected{% endif %}>{{ malfunction.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-3 my-1">
+                <label for="performed_by_filter">Кто ремонтировал</label>
+                <select class="form-control" name="performed_by" id="performed_by_filter">
+                    <option value="">Все пользователи</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}"
+                                {% if request.GET.performed_by == user.id|stringformat:"s" %}selected{% endif %}>{{ user.FIO }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-auto my-1">
+                <button type="submit" class="btn btn-primary">Применить</button>
+            </div>
+            <div class="col-auto my-1">
+                <a href="{% url 'export_repairs_to_excel' %}" class="btn btn-success">Экспорт в Excel</a>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Инвентарный номер</th>
+            <th>Тип устройства</th>
+            <th>Модель устройства</th>
+            <th>Характер неисправности</th>
+            <th>Работу выполнил</th>
+            <th>Примечание</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for repair in repairs %}
+            <tr>
+                <td>{{ repair.date_breakdown }}</td>
+                <td>{{ repair.device_instance.inventory_number }}</td>
+                <td>{{ repair.device_instance.device_model.name }}</td>
+                <td>{{ repair.device_instance.device_model.manufacturer }}</td>
+                <td>{{ repair.malfunction_type.name }}</td>
+                <td>{{ repair.performed_by.FIO }}</td>
+                <td>{{ repair.note }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
