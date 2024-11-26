@@ -1,10 +1,86 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Техническое обслуживание</h1>
+    <h1>Техническое обслуживание</h1>
 
-<table class="table table-bordered table-striped">
-    <thead>
+    <form method="get" class="mb-4">
+        <div class="row">
+            <div class="col-sm-3 my-1">
+                <label for="device_name_filter">Название устройства</label>
+                <input type="text" class="form-control" name="device_name" placeholder=""
+                       id="device_name_filter"
+                       value="{{ request.GET.device_name }}">
+            </div>
+            <div class="col-sm-3 my-1">
+                <label for="date_breakdown_start_filter">Дата поломки (начало)</label>
+                <input type="date" class="form-control" name="date_breakdown_start" placeholder=""
+                       id="date_breakdown_start_filter"
+                       value="{{ request.GET.date_breakdown_start }}">
+            </div>
+            <div class="col-sm-3 my-1">
+                <label for="date_breakdown_end_filter">Дата поломки (конец)</label>
+                <input type="date" class="form-control" name="date_breakdown_end" placeholder=""
+                       id="date_breakdown_end_filter"
+                       value="{{ request.GET.date_breakdown_end }}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 my-1">
+                <label for="inventory_number_filter">Инвентарный номер</label>
+                <input type="text" class="form-control" name="inventory_number" placeholder=""
+                       id="inventory_number_filter"
+                       value="{{ request.GET.inventory_number }}">
+            </div>
+            <div class="col-sm-3 my-1">
+                <label for="malfunction_type_filter">Вид ТО</label>
+                <select class="form-control" name="malfunction_type" id="malfunction_type_filter">
+                    <option value="">Все виды ТО</option>
+                    {% for malfunction in malfunction_types %}
+                        <option value="{{ malfunction.id }}"
+                                {% if request.GET.malfunction_type == malfunction.id|stringformat:"s" %}selected{% endif %}>{{ malfunction.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-3 my-1">
+                <label for="performed_by_filter">Кто ремонтировал</label>
+                <select class="form-control" name="performed_by" id="performed_by_filter">
+                    <option value="">Все пользователи</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}"
+                                {% if request.GET.performed_by == user.id|stringformat:"s" %}selected{% endif %}>{{ user.FIO }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 my-1">
+                <label for="device_type_filter">Тип устройства</label>
+                <select class="form-control" name="device_type" id="device_type_filter">
+                    <option value="">Все типы устройств</option>
+                    {% for type in device_types %}
+                        <option value="{{ type.id }}"
+                                {% if request.GET.device_type == type.id|stringformat:"s" %}selected{% endif %}>{{ type.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-auto my-1">
+                <button type="submit" class="btn btn-primary">Применить</button>
+            </div>
+            <div class="col-auto my-1">
+                <a href="{% url 'export_maintenance_to_excel' %}" class="btn btn-success">Экспорт в Excel</a>
+            </div>
+            {% if user.role == 'administrator' or user.role == 'master' %}
+                <div class="col-auto my-1">
+                    <a href="{% url 'maintenance-create' %}" class="btn btn-primary">Добавить ТО</a>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+
+    <table class="table table-bordered table-striped">
+        <thead>
         <tr>
             <th>Дата</th>
             <th>Инвентарный номер</th>
@@ -13,20 +89,30 @@
             <th>Вид ТО</th>
             <th>Работу выполнил</th>
             <th>Примечание</th>
+            {% if user.role == 'administrator' or user.role == 'master' %}
+                <th></th>
+            {% endif %}
         </tr>
-    </thead>
-    <tbody>
+        </thead>
+        <tbody>
         {% for maintenance in maintenances %}
-        <tr>
-            <td>{{ maintenance.date }}</td>
-            <td>{{ maintenance.device.inventory_number }}</td>
-            <td>{{ maintenance.device.device_model.name }}</td>
-            <td>{{ maintenance.device.device_model.manufacturer }}</td>
-            <td>{{ maintenance.type.name }}</td>
-            <td>{{ maintenance.performed_by.FIO }}</td>
-            <td>{{ maintenance.note }}</td>
-        </tr>
+            <tr>
+                <td>{{ maintenance.date }}</td>
+                <td>{{ maintenance.device_instance.inventory_number }}</td>
+                <td>{{ maintenance.device_instance.device_model.name }}</td>
+                <td>{{ maintenance.device_instance.device_model.manufacturer }}</td>
+                <td>{{ maintenance.type.name }}</td>
+                <td>{{ maintenance.performed_by.FIO }}</td>
+                <td>{{ maintenance.note }}</td>
+                {% if user.role == 'administrator' or user.role == 'master' %}
+                    <td>
+                        <a href="{% url 'maintenance-edit' maintenance.id %}" class="btn btn-warning btn-sm">Редактировать</a>
+                        <a href="{% url 'maintenance-delete' maintenance.id %}" class="btn btn-danger btn-sm"
+                           onclick="return confirm('Вы уверены, что хотите удалить эту запись?')">Удалить</a>
+                    </td>
+                {% endif %}
+            </tr>
         {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
 {% endblock %}

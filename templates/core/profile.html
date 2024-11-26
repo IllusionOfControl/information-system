@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Профиль пользователя: {{ user.username }}</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Последние ремонты ({{ recent_repairs.count }})
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for repair in recent_repairs %}
+                        <li class="list-group-item">{{ repair.device }} - {{ repair.malfunction_type }} ({{ repair.date_repair|date:"d.m.Y" }})</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Последние ТО ({{ recent_maintenance.count }})
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for maintenance in recent_maintenance %}
+                        <li class="list-group-item">{{ maintenance.device }} - {{ maintenance.type }} ({{ maintenance.date|date:"d.m.Y" }})</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    Статистика
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>За все время:</strong></p>
+                            <p>Ремонты: {{ total_repairs }}</p>
+                            <p>ТО: {{ total_maintenance }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>За последний месяц:</strong></p>
+                            <p>Ремонты: {{ monthly_repairs }}</p>
+                            <p>ТО: {{ monthly_maintenance }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

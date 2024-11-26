@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container">
+    <h1>Создать запись о ремонте</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.date_breakdown|as_crispy_field }}
+        </div>
+        <div class="form-group">
+            {{ form.device_instance|as_crispy_field }}
+        </div>
+        <div class="form-group">
+            {{ form.malfunction_type|as_crispy_field }}
+        </div>
+        <div class="form-group">
+            {{ form.date_repair|as_crispy_field }}
+        </div>
+        <div class="form-group">
+            {{ form.performed_by|as_crispy_field }}
+        </div>
+        <div class="form-group">
+            {{ form.note|as_crispy_field }}
+        </div>
+    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+</form>
+{% endblock %}
