@@ -26,14 +26,10 @@
         </div>
         <div class="row">
             <div class="col-sm-3 my-1">
-                <label for="device_type_filter">Тип устройства</label>
-                <select class="form-control" name="device_type" id="device_type_filter">
-                    <option value="">Все типы устройств</option>
-                    {% for type in device_types %}
-                        <option value="{{ type.id }}"
-                                {% if request.GET.device_type == type.id|stringformat:"s" %}selected{% endif %}>{{ type.name }}</option>
-                    {% endfor %}
-                </select>
+                <label for="inventory_number_filter">Инвентарный номер</label>
+                <input type="text" class="form-control" name="inventory_number" placeholder=""
+                       id="inventory_number_filter"
+                       value="{{ request.GET.inventory_number }}">
             </div>
             <div class="col-sm-3 my-1">
                 <label for="malfunction_type_filter">Тип неисправности</label>
@@ -46,12 +42,34 @@
                 </select>
             </div>
             <div class="col-sm-3 my-1">
-                <label for="performed_by_filter">Кто ремонтировал</label>
+                <label for="performed_by_filter">Ответственный</label>
                 <select class="form-control" name="performed_by" id="performed_by_filter">
                     <option value="">Все пользователи</option>
                     {% for user in users %}
                         <option value="{{ user.id }}"
                                 {% if request.GET.performed_by == user.id|stringformat:"s" %}selected{% endif %}>{{ user.FIO }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 my-1">
+                <label for="device_type_filter">Тип устройства</label>
+                <select class="form-control" name="device_type" id="device_type_filter">
+                    <option value="">Все типы устройств</option>
+                    {% for type in device_types %}
+                        <option value="{{ type.id }}"
+                                {% if request.GET.device_type == type.id|stringformat:"s" %}selected{% endif %}>{{ type.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-3 my-1">
+                <label for="department_filter">Отделение</label>
+                <select class="form-control" name="department" id="department_filter">
+                    <option value="">Все отделения</option>
+                    {% for department in departments %}
+                        <option value="{{ department.id }}"
+                                {% if request.GET.department == department.id|stringformat:"s" %}selected{% endif %}>{{ department.name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -75,14 +93,15 @@
         <thead>
         <tr>
             <th>Дата</th>
+            <th>ОПС</th>
             <th>Инвентарный номер</th>
             <th>Тип устройства</th>
             <th>Модель устройства</th>
             <th>Характер неисправности</th>
-            <th>Работу выполнил</th>
+            <th>Ответственный</th>
             <th>Примечание</th>
             {% if user.role == 'administrator' or user.role == 'master' %}
-                <th></th>
+                <th>Управление</th>
             {% endif %}
         </tr>
         </thead>
@@ -90,17 +109,33 @@
         {% for repair in repairs %}
             <tr>
                 <td>{{ repair.date_breakdown }}</td>
+                <td>{{ repair.device_instance.department.name }}</td>
                 <td>{{ repair.device_instance.inventory_number }}</td>
-                <td>{{ repair.device_instance.device_model.name }}</td>
-                <td>{{ repair.device_instance.device_model.manufacturer }}</td>
+                <td>{{ repair.device_instance.device_model.type.name }}</td>
+                <td>
+                    {{ repair.device_instance.device_model.manufacturer }}
+                    {{ repair.device_instance.device_model.name }}
+                </td>
                 <td>{{ repair.malfunction_type.name }}</td>
                 <td>{{ repair.performed_by.FIO }}</td>
                 <td>{{ repair.note }}</td>
-                {% if user.role == 'administrator' or user.role == 'master' %}
+                {% if user.is_authenticated %}
                     <td>
-                        <a href="{% url 'edit_repair' repair.id %}" class="btn btn-warning btn-sm">Редактировать</a>
-                        <a href="{% url 'delete_repair' repair.id %}" class="btn btn-danger btn-sm"
-                           onclick="return confirm('Вы уверены, что хотите удалить эту запись?')">Удалить</a>
+                        {% if user.role == 'administrator' or repair.performed_by == user %}
+                            <a href="{% url 'edit_repair' repair.id %}" class="btn btn-warning btn-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     class="bi bi-pencil" viewBox="0 0 16 16">
+                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                                </svg>
+                            </a>
+                            <a href="{% url 'delete_repair' repair.id %}" class="btn btn-danger btn-sm"
+                               onclick="return confirm('Вы уверены, что хотите удалить эту запись?')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                     class="bi bi-trash3" viewBox="0 0 16 16">
+                                    <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                </svg>
+                            </a>
+                        {% endif %}
                     </td>
                 {% endif %}
             </tr>

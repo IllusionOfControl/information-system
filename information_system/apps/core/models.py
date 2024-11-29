@@ -65,7 +65,7 @@ class DeviceInstance(models.Model):
     department = models.ForeignKey('Department', on_delete=models.CASCADE, verbose_name="Отделение связи")
 
     def __str__(self):
-        return f"{self.device_model} ({self.inventory_number})"
+        return f"{self.inventory_number} ({self.device_model})"
 
 
 class MaintenanceType(models.Model):
@@ -108,5 +108,5 @@ class Repair(models.Model):
     malfunction_type = models.ForeignKey(MalfunctionType, on_delete=models.PROTECT,
                                          verbose_name="Характер неисправности")
     date_repair = models.DateField(null=True, blank=True, verbose_name="Дата устранения поломки")
-    performed_by = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Работу выполнил")
+    performed_by = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Ответственный")
     note = models.TextField(blank=True, verbose_name="Примечание")

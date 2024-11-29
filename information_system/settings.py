@@ -29,7 +29,11 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://205e-146-120-39-117.ngrok-free.app"
+    "https://dde4-146-120-39-117.ngrok-free.app"
+]
+
+INTERNAL_IPS = [
+    "127.0.0.1",
 ]
 
 # Application definition
@@ -41,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "debug_toolbar",
     "crispy_bootstrap5",
     "crispy_forms",
     "information_system.apps.core",
@@ -54,6 +59,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = "information_system.urls"

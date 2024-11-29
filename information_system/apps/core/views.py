@@ -2,6 +2,8 @@ from datetime import timedelta, datetime
 
 import openpyxl
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import F, Value
+from django.db.models.functions import Concat
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
@@ -96,14 +98,27 @@ def repair_list(request):
     )
 
     device_name = request.GET.get('device_name')
+    inventory_number = request.GET.get('inventory_number')
     date_breakdown_start = request.GET.get('date_breakdown_start')
     date_breakdown_end = request.GET.get('date_breakdown_end')
     device_type = request.GET.get('device_type')
     malfunction_type = request.GET.get('malfunction_type')
     performed_by = request.GET.get('performed_by')
+    department = request.GET.get('department')
 
     if device_name:
-        queryset = queryset.filter(device_instance__name__icontains=device_name)
+        queryset = (
+            queryset
+            .annotate(full_name=Concat(
+                F('device_instance__device_model__manufacturer'),
+                Value(' '),
+                F('device_instance__device_model__name')
+            ))
+            .filter(full_name__icontains=device_name)
+        )
+
+    if inventory_number:
+        queryset = queryset.filter(device_instance__inventory_number=inventory_number)
 
     if date_breakdown_start:
         queryset = queryset.filter(date_breakdown__gte=date_breakdown_start)
@@ -120,12 +135,17 @@ def repair_list(request):
     if performed_by:
         queryset = queryset.filter(performed_by_id=performed_by)
 
+    if department:
+        queryset = queryset.filter(device_instance__department_id=department)
+
     repairs = queryset
     device_types = DeviceType.objects.all()
     malfunction_types = MalfunctionType.objects.all()
     users = User.objects.all()
+    departments = Department.objects.all()
 
-    context = {'repairs': repairs, 'device_types': device_types, 'malfunction_types': malfunction_types, 'users': users}
+    context = {'repairs': repairs, 'device_types': device_types, 'malfunction_types': malfunction_types, 'users': users,
+               'departments': departments}
     return render(request, 'core/repair_list.html', context)
 
 
@@ -135,14 +155,27 @@ def export_repairs_to_excel(request):
     )
 
     device_name = request.GET.get('device_name')
+    inventory_number = request.GET.get('inventory_number')
     date_breakdown_start = request.GET.get('date_breakdown_start')
     date_breakdown_end = request.GET.get('date_breakdown_end')
     device_type = request.GET.get('device_type')
     malfunction_type = request.GET.get('malfunction_type')
     performed_by = request.GET.get('performed_by')
+    department = request.GET.get('department')
 
     if device_name:
-        queryset = queryset.filter(device_instance__name__icontains=device_name)
+        queryset = (
+            queryset
+            .annotate(full_name=Concat(
+                F('device_instance__device_model__manufacturer'),
+                Value(' '),
+                F('device_instance__device_model__name')
+            ))
+            .filter(full_name__icontains=device_name)
+        )
+
+    if inventory_number:
+        queryset = queryset.filter(device_instance__inventory_number=inventory_number)
 
     if date_breakdown_start:
         queryset = queryset.filter(date_breakdown__gte=date_breakdown_start)
@@ -158,6 +191,9 @@ def export_repairs_to_excel(request):
 
     if performed_by:
         queryset = queryset.filter(performed_by_id=performed_by)
+
+    if department:
+        queryset = queryset.filter(device_instance__department_id=department)
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="repairs.xlsx"'
@@ -200,12 +236,24 @@ def maintenance_list(request):
     device_type = request.GET.get('device_type')
     malfunction_type = request.GET.get('malfunction_type')
     performed_by = request.GET.get('performed_by')
+    department = request.GET.get('department')
 
     if inventory_number:
         queryset = queryset.filter(device_instance__inventory_number=inventory_number)
 
     if device_name:
-        queryset = queryset.filter(device_instance__device_model__name__icontains=device_name)
+        queryset = (
+            queryset
+            .annotate(full_name=Concat(
+                F('device_instance__device_model__manufacturer'),
+                Value(' '),
+                F('device_instance__device_model__name')
+            ))
+            .filter(full_name__icontains=device_name)
+        )
+
+    if inventory_number:
+        queryset = queryset.filter(device_instance__inventory_number=inventory_number)
 
     if date_breakdown_start:
         queryset = queryset.filter(date__gte=date_breakdown_start)
@@ -222,18 +270,23 @@ def maintenance_list(request):
     if performed_by:
         queryset = queryset.filter(performed_by_id=performed_by)
 
+    if department:
+        queryset = queryset.filter(device_instance__department_id=department)
+
     maintenances = queryset
     device_types = DeviceType.objects.all()
     maintenance_types = MaintenanceType.objects.all()
     users = User.objects.all()
-    device_instances = DeviceInstance.objects.all()  # Все экземпляры устройств для фильтра
+    device_instances = DeviceInstance.objects.all()
+    departments = Department.objects.all()
 
     context = {
         'maintenances': maintenances,
         'device_types': device_types,
         'maintenance_types': maintenance_types,
         'users': users,
-        'device_instances': device_instances,  # Добавьте экземпляры устройств в контекст
+        'device_instances': device_instances,
+        'departments': departments,
     }
     return render(request, 'core/maintenance_list.html', context)
 
@@ -250,12 +303,21 @@ def export_maintenance_to_excel(request):
     device_type = request.GET.get('device_type')
     malfunction_type = request.GET.get('malfunction_type')
     performed_by = request.GET.get('performed_by')
+    department = request.GET.get('department')
 
     if inventory_number:
         queryset = queryset.filter(device_instance__inventory_number=inventory_number)
 
     if device_name:
-        queryset = queryset.filter(device_instance__device_model__name__icontains=device_name)
+        queryset = (
+            queryset
+            .annotate(full_name=Concat(
+                F('device_instance__device_model__manufacturer'),
+                Value(' '),
+                F('device_instance__device_model__name')
+            ))
+            .filter(full_name__icontains=device_name)
+        )
 
     if date_breakdown_start:
         queryset = queryset.filter(date__gte=date_breakdown_start)
@@ -271,6 +333,9 @@ def export_maintenance_to_excel(request):
 
     if performed_by:
         queryset = queryset.filter(performed_by_id=performed_by)
+
+    if department:
+        queryset = queryset.filter(device_instance__department_id=department)
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="maintenance.xlsx"'
@@ -311,12 +376,12 @@ def master_required(view_func):
 @master_required
 def create_repair(request):
     if request.method == 'POST':
-        form = RepairForm(request.POST)
+        form = RepairForm(request.POST, user=request.user)
         if form.is_valid():
             repair = form.save()
-            return redirect('repair_list')  # Перенаправляем на страницу списка ремонтов
+            return redirect('repair_list')
     else:
-        form = RepairForm()
+        form = RepairForm(user=request.user)
     return render(request, 'core/create_repair.html', {'form': form})
 
 
@@ -324,12 +389,12 @@ def create_repair(request):
 def edit_repair(request, repair_id):
     repair = get_object_or_404(Repair, pk=repair_id)
     if request.method == 'POST':
-        form = RepairForm(request.POST, instance=repair)
+        form = RepairForm(request.POST, user=request.user, instance=repair)
         if form.is_valid():
             form.save()
-            return redirect('repair_list')  # Или на другую страницу
+            return redirect('repair_list')
     else:
-        form = RepairForm(instance=repair)
+        form = RepairForm(user=request.user, instance=repair)
     return render(request, 'core/edit_repair.html', {'form': form, 'repair': repair})
 
 
@@ -343,12 +408,12 @@ def delete_repair(request, repair_id):
 @master_required
 def create_maintenance(request):
     if request.method == 'POST':
-        form = MaintenanceForm(request.POST)
+        form = MaintenanceForm(request.POST, user=request.user)
         if form.is_valid():
             maintenance = form.save()
             return redirect('maintenance_list')
     else:
-        form = MaintenanceForm()
+        form = MaintenanceForm(user=request.user)
     return render(request, 'core/create_maintenance.html', {'form': form})
 
 
@@ -356,12 +421,12 @@ def create_maintenance(request):
 def edit_maintenance(request, maintenance_id):
     maintenance = get_object_or_404(Maintenance, pk=maintenance_id)
     if request.method == 'POST':
-        form = MaintenanceForm(request.POST, instance=maintenance)
+        form = MaintenanceForm(request.POST, user=request.user, instance=maintenance)
         if form.is_valid():
             form.save()
             return redirect('maintenance_list')
     else:
-        form = MaintenanceForm(instance=maintenance)
+        form = MaintenanceForm(user=request.user, instance=maintenance)
     return render(request, 'core/edit_maintenance.html', {'form': form, 'maintenance': maintenance})
 
 
