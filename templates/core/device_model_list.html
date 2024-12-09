@@ -2,70 +2,67 @@
 
 {% block content %}
 
-    <h1>Справочник "Об устройстве"</h1>
-
-    <div class="row">
+    <h1>Справочник устройств</h1>
+    <div class="row mt-4">
         <div class="col-md-3">
-            <h2>Список моделей</h2>
-            <ul class="list-group">
-                {#                <li class="list-group-item {% if not selected_device_type %}active{% endif %}">#}
-                {#                    <a href="{% url 'device_model_list' %}">Все</a>#}
-                {#                </li>#}
+            <div class="list-group border-bottom scrollarea">
                 {% for device_type in device_types %}
-                    <li class="list-group-item {% if device_type == selected_device_type %}active{% endif %}">
-                        <a data-bs-toggle="collapse" href="#collapse{{ device_type.id }}" role="button"
-                           aria-expanded="false" aria-controls="collapse{{ device_type.id }}">
-                            {{ device_type.name }} ({{ device_type.devicemodel_set.all | length }})
-                        </a>
-                        <div class="collapse" id="collapse{{ device_type.id }}">
-                            <ul class="list-unstyled">
-                                {% for device_model in device_type.devicemodel_set.all %}
-                                    <li class="{% if device_model == selected_device_model %}active{% endif %}">
-                                        <a href="{% url 'device_model_list' %}?device_model={{ device_model.id }}"
-                                           style="padding-left: 20px;">
-                                            {{ device_model.manufacturer }} {{ device_model.name }}
-                                        </a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between {% if device_type == selected_device_type %}active{% endif %}"
+                       data-bs-toggle="collapse" href="#collapse{{ device_type.id }}"
+                       role="button"
+                       aria-expanded="false" aria-controls="collapse{{ device_type.id }}">
+                        {{ device_type.name }}
+                        <span class="badge bg-primary badge-pill">{{ device_type.devicemodel_set.all | length }}</span>
+                    </a>
+                    <div class="collapse" id="collapse{{ device_type.id }}">
+                        <div class="list-group-flush bg-light">
+                            {% for device_model in device_type.devicemodel_set.all %}
+                                <a class="list-group-item list-group-item-action {% if device_model == selected_device_model %}active{% endif %}"
+                                   href="{% url 'device_model_list' %}?device_model={{ device_model.id }}"
+                                   style="padding-left: 40px;">
+                                    {{ device_model.manufacturer }} {{ device_model.name }}
+                                </a>
+                            {% endfor %}
                         </div>
-                    </li>
+                    </div>
                 {% endfor %}
-            </ul>
+            </div>
         </div>
 
         <div class="col-md-9">
             {% if selected_device_model %}
                 <h2>{{ selected_device_model.manufacturer }} {{ selected_device_model.name }}</h2>
-                {% if device_model.image %}
-                    <img src="{{ device_model.image.url }}" alt="{{ device_model.name }}" width="200">
-                {% endif %}
-                
-                <h3>Описание устройства</h3>
-                {% if selected_device_model.description %}
-                    <p>{{ selected_device_model.description }}</p>
-                {% else %}
-                    <p>Описание отсутствует</p>
-                {% endif %}
 
-                <h3>Экземпляры устройств</h3>
+                <div class="row">
+                    <div class="col-md-9">
+                        {% if selected_device_model.description %}
+                            <p>{{ selected_device_model.description }}</p>
+                        {% else %}
+                            <p>Описание отсутствует</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        {% if device_model.image %}
+                            <img src="{{ device_model.image.url }}" alt="{{ device_model.name }}" width="200">
+                        {% endif %}
+                    </div>
+                </div>
 
+                <h4>Экземпляры устройств</h4>
                 <table class="table table-bordered table-striped">
                     <thead>
                     <tr>
-                        <th>Индекс</th>
-                        <th>ОПС</th>
                         <th>Инвентарный номер</th>
-                        <th>Модель устройства</th>
+                        <th>ОПС</th>
+                        <th>Индекс</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for device_instance in device_instances %}
                         <tr>
-                            <td>{{ device_instance.department.index }}</td>
-                            <td>{{ device_instance.department.name }}</td>
                             <td>{{ device_instance.inventory_number }}</td>
-                            <td>{{ device_instance.device_model.name }}</td>
+                            <td>{{ device_instance.department.name }}</td>
+                            <td>{{ device_instance.department.index }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

@@ -4,20 +4,18 @@
 
     <h1>Справочник отделений почтовой связи</h1>
 
-    <div class="row">
-        <div class="col-md-3">
-            <h2>Список ОПС</h2>
-            <ul class="list-group">
+    <div class="row mt-4">
+        <div class="col-md-2">
+            <div class="list-group border-bottom scrollarea">
                 {% for department in departments %}
-                    <li class="list-group-item {% if department == selected_department %}active{% endif %}">
-                        <a href="{% url 'department_list' %}?department={{ department.id }}">
-                            {{ department.name }}
-                        </a>
-                    </li>
+                    <a class="list-group-item list-group-item-action {% if department == selected_department %}active{% endif %}"
+                       href="{% url 'department_list' %}?department={{ department.id }}">
+                        {{ department.name }}
+                    </a>
                 {% endfor %}
-            </ul>
+            </div>
         </div>
-        <div class="col-md-9">
+        <div class="col-md-10">
             {% if selected_department %}
                 <h2>{{ selected_department.name }}</h2>
                 <p>Индекс: {{ selected_department.index }}</p>
