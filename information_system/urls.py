@@ -35,9 +35,7 @@ urlpatterns = [
     path('devices/', core_views.device_list, name='device_list'),
     path('device_models/', core_views.device_model_list, name='device_model_list'),
     path('repairs/', core_views.repair_list, name='repair_list'),
-    path('export_repairs_to_excel/', core_views.export_repairs_to_excel, name='export_repairs_to_excel'),
     path('maintenance/', core_views.maintenance_list, name='maintenance_list'),
-    path('export_maintenance_to_excel/', core_views.export_maintenance_to_excel, name='export_maintenance_to_excel'),
 
     path('repairs/create/', core_views.create_repair, name='create_repair'),
     path('repairs/<int:repair_id>/edit/', core_views.edit_repair, name='edit_repair'),

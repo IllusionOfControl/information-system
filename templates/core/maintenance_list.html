@@ -76,10 +76,10 @@
         </div>
         <div class="row">
             <div class="col-auto my-1">
-                <button type="submit" class="btn btn-primary">Применить</button>
+                <button type="submit" name="submit" class="btn btn-primary">Применить</button>
             </div>
             <div class="col-auto my-1">
-                <a href="{% url 'export_maintenance_to_excel' %}" class="btn btn-success">Экспорт в Excel</a>
+                <button type="submit" name="export" class="btn btn-success">Экспорт в Excel</button>
             </div>
             {% if user.role == 'administrator' or user.role == 'master' %}
                 <div class="col-auto my-1">

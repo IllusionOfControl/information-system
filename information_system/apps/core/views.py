@@ -139,90 +139,56 @@ def repair_list(request):
         queryset = queryset.filter(device_instance__department_id=department)
 
     repairs = queryset
-    device_types = DeviceType.objects.all()
-    malfunction_types = MalfunctionType.objects.all()
-    users = User.objects.all()
-    departments = Department.objects.all()
 
-    context = {'repairs': repairs, 'device_types': device_types, 'malfunction_types': malfunction_types, 'users': users,
-               'departments': departments}
-    return render(request, 'core/repair_list.html', context)
+    if "submit" in request.GET:
+        device_types = DeviceType.objects.all()
+        malfunction_types = MalfunctionType.objects.all()
+        users = User.objects.all()
+        departments = Department.objects.all()
 
+        context = {'repairs': repairs, 'device_types': device_types, 'malfunction_types': malfunction_types,
+                   'users': users,
+                   'departments': departments}
+        return render(request, 'core/repair_list.html', context)
+    if "export" in request.GET:
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="repairs.xlsx"'
 
-def export_repairs_to_excel(request):
-    queryset = Repair.objects.all().select_related(
-        'device_instance', 'device_instance__device_model', 'performed_by', "malfunction_type"
-    )
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = "Ремонты"
 
-    device_name = request.GET.get('device_name')
-    inventory_number = request.GET.get('inventory_number')
-    date_breakdown_start = request.GET.get('date_breakdown_start')
-    date_breakdown_end = request.GET.get('date_breakdown_end')
-    device_type = request.GET.get('device_type')
-    malfunction_type = request.GET.get('malfunction_type')
-    performed_by = request.GET.get('performed_by')
-    department = request.GET.get('department')
+        # Заголовки столбцов
+        columns = [
+            "Дата поломки", "Устройство", "Тип неисправности", "Дата устранения", "Выполнил", "Примечание"
+        ]
+        for col_num, column_title in enumerate(columns, 1):
+            cell = worksheet.cell(row=1, column=col_num)
+            cell.value = column_title
 
-    if device_name:
-        queryset = (
-            queryset
-            .annotate(full_name=Concat(
-                F('device_instance__device_model__manufacturer'),
-                Value(' '),
-                F('device_instance__device_model__name')
-            ))
-            .filter(full_name__icontains=device_name)
-        )
+        # Данные
+        for row_num, repair in enumerate(queryset, 2):  # Начинаем со второй строки
+            worksheet.cell(row=row_num, column=1).value = repair.date_breakdown.strftime('%Y-%m-%d')
+            worksheet.cell(row=row_num, column=2).value = str(repair.device_instance)
+            worksheet.cell(row=row_num, column=3).value = str(repair.malfunction_type)
+            worksheet.cell(row=row_num, column=4).value = repair.date_repair.strftime(
+                '%Y-%m-%d') if repair.date_repair else ""  # Проверка на None
+            worksheet.cell(row=row_num, column=5).value = str(repair.performed_by.FIO)
+            worksheet.cell(row=row_num, column=6).value = repair.note
 
-    if inventory_number:
-        queryset = queryset.filter(device_instance__inventory_number=inventory_number)
+        workbook.save(response)
 
-    if date_breakdown_start:
-        queryset = queryset.filter(date_breakdown__gte=date_breakdown_start)
+        return response
+    else:
+        device_types = DeviceType.objects.all()
+        malfunction_types = MalfunctionType.objects.all()
+        users = User.objects.all()
+        departments = Department.objects.all()
 
-    if date_breakdown_end:
-        queryset = queryset.filter(date_breakdown__lte=date_breakdown_end)
-
-    if device_type:
-        queryset = queryset.filter(device_instance__device_model__type_id=device_type)
-
-    if malfunction_type:
-        queryset = queryset.filter(malfunction_type_id=malfunction_type)
-
-    if performed_by:
-        queryset = queryset.filter(performed_by_id=performed_by)
-
-    if department:
-        queryset = queryset.filter(device_instance__department_id=department)
-
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="repairs.xlsx"'
-
-    workbook = openpyxl.Workbook()
-    worksheet = workbook.active
-    worksheet.title = "Ремонты"
-
-    # Заголовки столбцов
-    columns = [
-        "Дата поломки", "Устройство", "Тип неисправности", "Дата устранения", "Выполнил", "Примечание"
-    ]
-    for col_num, column_title in enumerate(columns, 1):
-        cell = worksheet.cell(row=1, column=col_num)
-        cell.value = column_title
-
-    # Данные
-    for row_num, repair in enumerate(queryset, 2):  # Начинаем со второй строки
-        worksheet.cell(row=row_num, column=1).value = repair.date_breakdown.strftime('%Y-%m-%d')
-        worksheet.cell(row=row_num, column=2).value = str(repair.device_instance)
-        worksheet.cell(row=row_num, column=3).value = str(repair.malfunction_type)
-        worksheet.cell(row=row_num, column=4).value = repair.date_repair.strftime(
-            '%Y-%m-%d') if repair.date_repair else ""  # Проверка на None
-        worksheet.cell(row=row_num, column=5).value = str(repair.performed_by.FIO)
-        worksheet.cell(row=row_num, column=6).value = repair.note
-
-    workbook.save(response)
-
-    return response
+        context = {'repairs': repairs, 'device_types': device_types, 'malfunction_types': malfunction_types,
+                   'users': users,
+                   'departments': departments}
+        return render(request, 'core/repair_list.html', context)
 
 
 def maintenance_list(request):
@@ -280,92 +246,58 @@ def maintenance_list(request):
     device_instances = DeviceInstance.objects.all()
     departments = Department.objects.all()
 
-    context = {
-        'maintenances': maintenances,
-        'device_types': device_types,
-        'maintenance_types': maintenance_types,
-        'users': users,
-        'device_instances': device_instances,
-        'departments': departments,
-    }
-    return render(request, 'core/maintenance_list.html', context)
+    if 'submit' in request.GET:
+        context = {
+            'maintenances': maintenances,
+            'device_types': device_types,
+            'maintenance_types': maintenance_types,
+            'users': users,
+            'device_instances': device_instances,
+            'departments': departments,
+        }
+        return render(request, 'core/maintenance_list.html', context)
+    if "export" in request.GET:
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="maintenance.xlsx"'
 
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = "Техническое обслуживание"
 
-def export_maintenance_to_excel(request):
-    queryset = Maintenance.objects.all().select_related(
-        'device_instance', 'device_instance__device_model', 'performed_by', "type"
-    )
+        # Заголовки столбцов
+        columns = [
+            "Дата ТО", "Отделение ОПС", "Инвентарный номер", "Тип устройства", "Модель Устройства", "Тип обслуживания",
+            "Выполнил",
+            "Примечание"
+        ]
+        for col_num, column_title in enumerate(columns, 1):
+            cell = worksheet.cell(row=1, column=col_num)
+            cell.value = column_title
 
-    device_name = request.GET.get('device_name')
-    inventory_number = request.GET.get('inventory_number')
-    date_breakdown_start = request.GET.get('date_breakdown_start')
-    date_breakdown_end = request.GET.get('date_breakdown_end')
-    device_type = request.GET.get('device_type')
-    malfunction_type = request.GET.get('malfunction_type')
-    performed_by = request.GET.get('performed_by')
-    department = request.GET.get('department')
+        # Данные
+        for row_num, maintenance in enumerate(queryset, 2):  # Начинаем со второй строки
+            worksheet.cell(row=row_num, column=1).value = maintenance.date.strftime('%Y-%m-%d')
+            worksheet.cell(row=row_num, column=2).value = str(maintenance.device_instance.department.name)
+            worksheet.cell(row=row_num, column=3).value = str(maintenance.device_instance.inventory_number)
+            worksheet.cell(row=row_num, column=4).value = str(maintenance.device_instance.device_model.type)
+            worksheet.cell(row=row_num, column=5).value = str(maintenance.device_instance.device_model.name)
+            worksheet.cell(row=row_num, column=6).value = str(maintenance.type.name)
+            worksheet.cell(row=row_num, column=7).value = str(maintenance.performed_by.FIO)
+            worksheet.cell(row=row_num, column=8).value = maintenance.note
 
-    if inventory_number:
-        queryset = queryset.filter(device_instance__inventory_number=inventory_number)
+        workbook.save(response)
 
-    if device_name:
-        queryset = (
-            queryset
-            .annotate(full_name=Concat(
-                F('device_instance__device_model__manufacturer'),
-                Value(' '),
-                F('device_instance__device_model__name')
-            ))
-            .filter(full_name__icontains=device_name)
-        )
-
-    if date_breakdown_start:
-        queryset = queryset.filter(date__gte=date_breakdown_start)
-
-    if date_breakdown_end:
-        queryset = queryset.filter(date__lte=date_breakdown_end)
-
-    if device_type:
-        queryset = queryset.filter(device_instance__device_model__type_id=device_type)
-
-    if malfunction_type:
-        queryset = queryset.filter(type__id=malfunction_type)
-
-    if performed_by:
-        queryset = queryset.filter(performed_by_id=performed_by)
-
-    if department:
-        queryset = queryset.filter(device_instance__department_id=department)
-
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="maintenance.xlsx"'
-
-    workbook = openpyxl.Workbook()
-    worksheet = workbook.active
-    worksheet.title = "Техническое обслуживание"
-
-    # Заголовки столбцов
-    columns = [
-        "Дата ТО", "Инвентарный номер", "Тип устройства", "Модель Устройства", "Тип обслуживания", "Выполнил",
-        "Примечание"
-    ]
-    for col_num, column_title in enumerate(columns, 1):
-        cell = worksheet.cell(row=1, column=col_num)
-        cell.value = column_title
-
-    # Данные
-    for row_num, maintenance in enumerate(queryset, 2):  # Начинаем со второй строки
-        worksheet.cell(row=row_num, column=1).value = maintenance.date.strftime('%Y-%m-%d')
-        worksheet.cell(row=row_num, column=2).value = str(maintenance.device_instance.inventory_number)
-        worksheet.cell(row=row_num, column=3).value = str(maintenance.device_instance.device_model.type)
-        worksheet.cell(row=row_num, column=3).value = str(maintenance.device_instance.device_model.name)
-        worksheet.cell(row=row_num, column=3).value = str(maintenance.type.name)
-        worksheet.cell(row=row_num, column=5).value = str(maintenance.performed_by.FIO)
-        worksheet.cell(row=row_num, column=6).value = maintenance.note
-
-    workbook.save(response)
-
-    return response
+        return response
+    else:
+        context = {
+            'maintenances': maintenances,
+            'device_types': device_types,
+            'maintenance_types': maintenance_types,
+            'users': users,
+            'device_instances': device_instances,
+            'departments': departments,
+        }
+        return render(request, 'core/maintenance_list.html', context)
 
 
 def master_required(view_func):
