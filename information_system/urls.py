@@ -44,6 +44,7 @@ urlpatterns = [
     path('maintenance/create/', core_views.create_maintenance, name='maintenance-create'),
     path('maintenance/<int:maintenance_id>/edit/', core_views.edit_maintenance, name='maintenance-edit'),
     path('maintenance/<int:maintenance_id>/delete/', core_views.delete_maintenance, name='maintenance-delete'),
+    path('exchange_rates/', core_views.exchange_rates, name='exchange_rates'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import F, Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect
 
 from information_system.apps.core.forms import RepairForm, MaintenanceForm
 from information_system.apps.core.models import Department, DeviceModel, DeviceInstance, DeviceType, Repair, \
@@ -367,3 +367,51 @@ def delete_maintenance(request, maintenance_id):
     repair = get_object_or_404(Maintenance, pk=maintenance_id)
     repair.delete()
     return redirect('maintenance_list')
+
+
+from django.shortcuts import render
+import requests
+
+
+def exchange_rates(request):
+    url = 'https://www.nbrb.by/api/exrates/rates?periodicity=0'  # API Нацбанка Беларуси для ежедневных курсов
+    error_message = None
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Проверка на ошибки HTTP
+        rates_data = response.json()
+    except requests.exceptions.RequestException as e:
+        rates_data = []  # Пустой список, если ошибка
+        error_message = f"Ошибка получения данных о курсах валют: {e}"
+
+    amount = request.GET.get('amount', '')
+    from_currency = request.GET.get('from_currency', '')
+    to_currency = request.GET.get('to_currency', '')
+    converted_amount = None
+    error_conversion = None
+
+    if amount and from_currency and to_currency:
+        try:
+            amount = float(amount)
+            from_rate = next((rate['Cur_OfficialRate'] / rate['Cur_Scale'] for rate in rates_data if
+                              rate['Cur_Abbreviation'] == from_currency), None)
+            to_rate = next((rate['Cur_OfficialRate'] / rate['Cur_Scale'] for rate in rates_data if
+                            rate['Cur_Abbreviation'] == to_currency), None)
+            if from_rate and to_rate:
+                converted_amount = amount * from_rate / to_rate
+            else:
+                error_conversion = "Выбраны неверные валюты."
+
+        except ValueError:
+            error_conversion = "Неверный формат суммы."
+
+    context = {
+        'rates_data': rates_data,
+        'amount': amount,
+        'from_currency': from_currency,
+        'to_currency': to_currency,
+        'converted_amount': converted_amount,
+        'error_conversion': error_conversion,
+        'error_message': error_message,
+    }
+    return render(request, 'core/exchange_rates.html', context)
